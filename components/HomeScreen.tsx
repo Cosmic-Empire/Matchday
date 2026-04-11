@@ -70,9 +70,9 @@ export default function HomeScreen() {
 }, []);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
+    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#0B0B0F] to-[#07070A]">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-14 pb-4">
+      <div className="sticky top-0 z-10 flex items-center justify-between px-5 pt-14 pb-4 bg-[#0A0A0A]/60 backdrop-blur-xl border-b border-white/5">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-[#00FF87] flex items-center justify-center">
             <span className="text-black font-black text-sm tracking-tighter">MD</span>
@@ -82,7 +82,7 @@ export default function HomeScreen() {
         {/* Settings icon — placeholder for now */}
         <button
   onClick={() => setShowSettings(true)}
-  className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center"
+  className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center shadow-md"
 >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#71717a" strokeWidth="1.5"/>
@@ -106,19 +106,27 @@ export default function HomeScreen() {
             {standings.map(league => {
               const { bg, accent } = LEAGUE_COLORS[league.name];
               return (
-                <div
+               <div
   key={league.name}
   onClick={() => setSelectedLeague(league)}
-  className="rounded-2xl overflow-hidden cursor-pointer"
- style={{ backgroundColor: bg }}>
+  className="rounded-2xl overflow-hidden cursor-pointer shadow-lg border border-white/10"
+style={{
+  background: `linear-gradient(135deg, ${bg}, ${accent}55)`,
+  boxShadow: `0 10px 25px rgba(0,0,0,0.35)`,
+}}
+>
                   <div className="flex items-center justify-between px-4 py-3">
                     <span className="text-white font-bold text-sm">{league.name}</span>
                     <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                      style={{ backgroundColor: `${accent}33`, color: accent }}>
+                      style={{
+  backgroundColor: `${accent}22`,
+  color: accent,
+  boxShadow: "none",
+}}>
                       2025/26
                     </span>
                   </div>
-                  <div className="flex items-center px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                  <div className="flex items-center px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
                     <span className="text-zinc-400 text-xs w-6">#</span>
                     <span className="text-zinc-400 text-xs flex-1">Team</span>
                     <span className="text-zinc-400 text-xs w-8 text-center">P</span>
@@ -130,7 +138,7 @@ export default function HomeScreen() {
                     </div>
                   ) : (
                     league.table.slice(0, 4).map((row, i) => (
-                      <div key={row.team} className="flex items-center px-4 py-2.5"
+                      <div key={row.team} className="flex items-center px-4 py-2.5 hover:bg-white/5 transition"
                         style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
                         <span className="text-zinc-400 text-xs w-6">{row.rank}</span>
                         <span className="text-white text-sm font-medium flex-1">{row.team}</span>
@@ -162,7 +170,7 @@ export default function HomeScreen() {
 
       {/* Mobile sheet */}
       <motion.div
-  className="fixed top-10 left-1/2 -translate-x-1/2 w-[88%] max-w-sm rounded-3xl overflow-hidden max-h-[80vh]"
+  className="fixed top-10 left-1/2 -translate-x-1/2 w-[88%] max-w-sm rounded-3xl overflow-hidden max-h-[80vh] bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl"
   initial={{ y: "20%", opacity: 0 }}
   animate={{ y: 0, opacity: 1 }}
   exit={{ y: "20%", opacity: 0 }}
@@ -241,7 +249,7 @@ export default function HomeScreen() {
 
       {/* Settings panel */}
       <motion.div
-        className="fixed top-10 left-1/2 -translate-x-1/2 w-[88%] max-w-sm rounded-3xl overflow-hidden bg-[#111] border border-white/10"
+        className="fixed top-10 left-1/2 -translate-x-1/2 w-[88%] max-w-sm rounded-3xl overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl"
         initial={{ y: "20%", opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "20%", opacity: 0 }}
@@ -267,17 +275,17 @@ export default function HomeScreen() {
         {/* Content */}
         <div className="px-4 pb-6 space-y-4">
 
-          <div className="bg-white/5 rounded-xl p-3">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-md hover:bg-white/10 transition">
             <p className="text-sm text-white">Default League</p>
             <p className="text-xs text-zinc-400">Premier League</p>
           </div>
 
-          <div className="bg-white/5 rounded-xl p-3">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-md hover:bg-white/10 transition">
             <p className="text-sm text-white">Compact Mode</p>
             <p className="text-xs text-zinc-400">Top 4 standings view</p>
           </div>
 
-          <div className="bg-white/5 rounded-xl p-3">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-md hover:bg-white/10 transition">
             <p className="text-sm text-white">Data Refresh</p>
             <p className="text-xs text-zinc-400">Auto-updating enabled</p>
           </div>
