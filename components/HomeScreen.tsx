@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 console.log("HOME SCREEN RENDERED");
+
 
 const LEAGUE_COLORS: Record<string, { bg: string; accent: string }> = {
   'Premier League': { bg: '#3d0066', accent: '#9b30ff' },
@@ -29,6 +31,9 @@ interface LeagueData {
 export default function HomeScreen() {
   const [standings, setStandings] = useState<LeagueData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLeague, setSelectedLeague] = useState<LeagueData | null>(null);
+
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
   const fetchAll = async () => {
@@ -75,7 +80,10 @@ export default function HomeScreen() {
           <span className="text-white font-bold text-xl tracking-tight">Matchday</span>
         </div>
         {/* Settings icon — placeholder for now */}
-        <button className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+        <button
+  onClick={() => setShowSettings(true)}
+  className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center"
+>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#71717a" strokeWidth="1.5"/>
             <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="#71717a" strokeWidth="1.5"/>
@@ -98,7 +106,11 @@ export default function HomeScreen() {
             {standings.map(league => {
               const { bg, accent } = LEAGUE_COLORS[league.name];
               return (
-                <div key={league.name} className="rounded-2xl overflow-hidden" style={{ backgroundColor: bg }}>
+                <div
+  key={league.name}
+  onClick={() => setSelectedLeague(league)}
+  className="rounded-2xl overflow-hidden cursor-pointer"
+ style={{ backgroundColor: bg }}>
                   <div className="flex items-center justify-between px-4 py-3">
                     <span className="text-white font-bold text-sm">{league.name}</span>
                     <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -117,7 +129,7 @@ export default function HomeScreen() {
                       <span className="text-zinc-500 text-xs">No data — run update</span>
                     </div>
                   ) : (
-                    league.table.map((row, i) => (
+                    league.table.slice(0, 4).map((row, i) => (
                       <div key={row.team} className="flex items-center px-4 py-2.5"
                         style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
                         <span className="text-zinc-400 text-xs w-6">{row.rank}</span>
@@ -133,6 +145,147 @@ export default function HomeScreen() {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+  {selectedLeague && (
+    <div
+      className="fixed inset-0 z-50"
+      onClick={() => setSelectedLeague(null)}
+    >
+      {/* Background blur */}
+      <motion.div
+       className="fixed inset-0 bg-black/60 backdrop-blur-md"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      />
+
+      {/* Mobile sheet */}
+      <motion.div
+  className="fixed top-10 left-1/2 -translate-x-1/2 w-[88%] max-w-sm rounded-3xl overflow-hidden max-h-[80vh]"
+  initial={{ y: "20%", opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  exit={{ y: "20%", opacity: 0 }}
+  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+  onClick={(e) => e.stopPropagation()}
+>
+        {/* drag handle */}
+        <div className="w-full flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 bg-white/30 rounded-full" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pb-3">
+          <span className="text-white font-bold text-lg">
+            {selectedLeague.name}
+          </span>
+
+          <button
+            onClick={() => setSelectedLeague(null)}
+            className="text-white/70 text-sm"
+          >
+            Close
+          </button>
+        </div>
+
+        {/* Table header */}
+        <div className="flex items-center px-4 py-2 bg-black/30">
+          <span className="text-xs text-zinc-400 w-6">#</span>
+          <span className="text-xs text-zinc-400 flex-1">Team</span>
+          <span className="text-xs text-zinc-400 w-10 text-center">P</span>
+          <span className="text-xs text-zinc-400 w-10 text-center">PTS</span>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="overflow-y-auto max-h-[70vh]">
+          {selectedLeague.table.map((row) => (
+            <div
+              key={row.team}
+              className="flex items-center px-4 py-3 border-t border-white/10"
+            >
+              <span className="text-zinc-300 text-xs w-6">
+                {row.rank}
+              </span>
+
+              <span className="text-white text-sm flex-1 truncate">
+                {row.team}
+              </span>
+
+              <span className="text-zinc-300 text-xs w-10 text-center">
+                {row.played}
+              </span>
+
+              <span className="text-white font-bold text-sm w-10 text-center">
+                {row.points}
+              </span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     </div>
-  );
-}
+  )}
+</AnimatePresence>
+
+<AnimatePresence>
+  {showSettings && (
+    <div className="fixed inset-0 z-50">
+      
+      {/* Background blur */}
+      <motion.div
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => setShowSettings(false)}
+      />
+
+      {/* Settings panel */}
+      <motion.div
+        className="fixed top-10 left-1/2 -translate-x-1/2 w-[88%] max-w-sm rounded-3xl overflow-hidden bg-[#111] border border-white/10"
+        initial={{ y: "20%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "20%", opacity: 0 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      >
+        {/* Handle */}
+        <div className="w-full flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 bg-white/20 rounded-full" />
+        </div>
+
+        {/* Header */}
+        <div className="px-4 pb-3 flex items-center justify-between">
+          <span className="text-white font-bold text-lg">Settings</span>
+
+          <button
+            onClick={() => setShowSettings(false)}
+            className="text-zinc-400 text-sm"
+          >
+            Close
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-4 pb-6 space-y-4">
+
+          <div className="bg-white/5 rounded-xl p-3">
+            <p className="text-sm text-white">Default League</p>
+            <p className="text-xs text-zinc-400">Premier League</p>
+          </div>
+
+          <div className="bg-white/5 rounded-xl p-3">
+            <p className="text-sm text-white">Compact Mode</p>
+            <p className="text-xs text-zinc-400">Top 4 standings view</p>
+          </div>
+
+          <div className="bg-white/5 rounded-xl p-3">
+            <p className="text-sm text-white">Data Refresh</p>
+            <p className="text-xs text-zinc-400">Auto-updating enabled</p>
+          </div>
+
+        </div>
+      </motion.div>
+    </div>
+  )}
+</AnimatePresence>
+  </div>
+)}
