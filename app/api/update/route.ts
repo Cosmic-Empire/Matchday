@@ -1,3 +1,15 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error("Missing Supabase environment variables");
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 export async function POST() {
   try {
     console.log('Updating all leagues...');
@@ -6,6 +18,14 @@ export async function POST() {
     const season = month >= 7
       ? new Date().getFullYear()
       : new Date().getFullYear() - 1;
+
+      const leagueMap: Record<string, number> = {
+  'Premier League': 39,
+  'La Liga': 140,
+  'Bundesliga': 78,
+  'Serie A': 135,
+  'Ligue 1': 61,
+};
 
     for (const league of Object.keys(leagueMap)) {
       const leagueId = leagueMap[league];
@@ -19,11 +39,14 @@ export async function POST() {
         }
       );
 
+      
       console.log("SEASON USED:", season);
+
+const data = await res.json();
+
 console.log("API RAW:", JSON.stringify(data, null, 2));
 
-      const data = await res.json();
-      const table = data.response?.[0]?.league?.standings?.[0];
+const table = data.response?.[0]?.league?.standings?.[0];
 
       if (!table) continue;
 
