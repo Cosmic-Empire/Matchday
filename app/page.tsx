@@ -1,14 +1,84 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import HomeScreen from '../components/HomeScreen';
 import GameScreen from '../components/GameScreen';
 import CreateScreen from '../components/CreateScreen';
 import ClubScreen from '../components/ClubScreen';
+import { useRef } from 'react';
+
 
 export default function App() {
+  const containerRef = useRef<HTMLDivElement>(null);
+const indicatorRef = useRef<HTMLDivElement>(null);
+const isAnimatingRef = useRef(false);
+
   const [activeTab, setActiveTab] =
     useState<'home' | 'games' | 'create' | 'club'>('home');
+
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+  const handleScroll = () => {
+    setScrolled(window.scrollY > 20);
+  };
+
+  window.addEventListener('scroll', handleScroll);
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+
+useEffect(() => {
+  const container = containerRef.current;
+  const indicator = indicatorRef.current;
+
+  if (!container || !indicator) return;
+
+  const updateIndicator = () => {
+    const buttons = container.querySelectorAll('button');
+    const index = ['home', 'games', 'create', 'club'].indexOf(activeTab);
+    const btn = buttons[index] as HTMLElement;
+    if (!btn) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+
+    const centerX =
+      btnRect.left - containerRect.left + btnRect.width / 2;
+
+    const indicatorWidth = Math.min(
+      btnRect.width * 1.35,
+      containerRect.width / 3.8
+    );
+
+    const left = centerX - indicatorWidth / 2;
+
+    const clampedLeft = Math.max(
+      4,
+      Math.min(left, containerRect.width - indicatorWidth - 4)
+    );
+
+    indicator.style.width = `${indicatorWidth}px`;
+    indicator.style.left = `${clampedLeft}px`;
+  };
+
+  // 🔥 Observe container size changes (THIS is the fix)
+  const resizeObserver = new ResizeObserver(() => {
+    requestAnimationFrame(updateIndicator);
+  });
+
+  resizeObserver.observe(container);
+
+  // Also observe each button (important for icon scaling)
+  const buttons = container.querySelectorAll('button');
+  buttons.forEach((btn) => resizeObserver.observe(btn));
+
+  // Initial position
+  requestAnimationFrame(updateIndicator);
+
+  return () => {
+    resizeObserver.disconnect();
+  };
+}, [activeTab]);
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white font-sans">
@@ -18,45 +88,53 @@ export default function App() {
         {activeTab === 'create' && <CreateScreen />}
         {activeTab === 'club' && <ClubScreen />}
 
-        <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[86%] max-w-[380px] z-50">
-          <div className="flex items-center justify-around px-2 py-1.5 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl">
+     <nav
+  className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300
+  ${scrolled ? 'w-[72%] max-w-[300px]' : 'w-[80%] max-w-[330px]'}`}
+>
+  <div
+  ref={containerRef}
+  className="relative flex items-center justify-between px-1 py-1 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl transition-all duration-300 overflo"
+>
+  
 
-            {[
-              { id: 'home', label: 'Home', icon: HomeIcon },
-              { id: 'games', label: 'Games', icon: GamesIcon },
-              { id: 'create', label: 'Create', icon: CreateIcon },
-              { id: 'club', label: 'Club', icon: ClubIcon },
-            ].map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id as typeof activeTab)}
-                className="relative flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-2xl transition-all duration-300"
-              >
-                <div
-                  className={`absolute inset-0 rounded-2xl transition-all duration-300 ${
-                    activeTab === id ? 'bg-[#00FF87]/10' : ''
-                  }`}
-                />
+    {/* 🔥 PERFECT INDICATOR */}
+    <div
+  ref={indicatorRef}
+  className="absolute inset-y-1 rounded-full bg-[#00FF87]/15 backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] shadow-[0_0_20px_rgba(0,255,135,0.15)]"
+/>
 
-                <div
-                  className={`relative w-9 h-9 flex items-center justify-center transition-all duration-300 ${
-                    activeTab === id ? '-translate-y-1' : ''
-                  }`}
-                >
-                  <Icon active={activeTab === id} />
-                </div>
-
-                <span
-                  className={`text-[9px] font-medium tracking-wide transition-all duration-300 ${
-                    activeTab === id ? 'text-[#00FF87]' : 'text-zinc-500'
-                  }`}
-                >
-                  {label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </nav>
+    {[
+      { id: 'home', label: 'Home', icon: HomeIcon },
+      { id: 'games', label: 'Games', icon: GamesIcon },
+      { id: 'create', label: 'Create', icon: CreateIcon },
+      { id: 'club', label: 'Club', icon: ClubIcon },
+    ].map(({ id, label, icon: Icon }) => (
+      <button
+  key={id}
+  onClick={() => setActiveTab(id as typeof activeTab)}
+  className="relative flex flex-1 flex-col items-center gap-1 px-2 py-1 rounded-2xl transition-all duration-300"
+>
+        <div
+  className={`relative flex items-center justify-center transition-all duration-300
+  ${scrolled ? 'w-7 h-7' : 'w-8 h-8'}
+  ${activeTab === id ? '-translate-y-1 scale-110 drop-shadow-[0_0_6px_rgba(0,255,135,0.6)]' : 'scale-100'}`}
+>
+  <Icon active={activeTab === id} />
+</div>
+        <span
+          className={`transition-all duration-300 ${
+            scrolled ? 'text-[7px]' : 'text-[8px]'
+          } font-medium tracking-wide ${
+            activeTab === id ? 'text-[#00FF87]' : 'text-zinc-500'
+          }`}
+        >
+          {label}
+        </span>
+      </button>
+    ))}
+  </div>
+</nav>
       </div>
     </div>
   );
