@@ -27,6 +27,9 @@ interface LeagueData {
 }
 
 export default function HomeScreen() {
+
+console.log("🔥 HOME SCREEN RENDERED - TEST 2026-04-12");
+
   const [standings, setStandings] = useState<LeagueData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLeague, setSelectedLeague] = useState<LeagueData | null>(null);
@@ -62,6 +65,9 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
+
+console.log("🔥 USEEFFECT RAN - FETCH START");
+
   const fetchAll = async () => {
     try {
       const results = await Promise.allSettled(
