@@ -1,71 +1,71 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error("Missing Supabase environment variables");
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const leagueMap: Record<string, string> = {
+  'Premier League': 'PL',
+  'La Liga': 'PD',
+  'Bundesliga': 'BL1',
+  'Serie A': 'SA',
+  'Ligue 1': 'FL1',
+};
 
 export async function POST() {
   try {
-    console.log('Updating all leagues...');
-
-    const month = new Date().getMonth();
-    const season = month >= 7
-      ? new Date().getFullYear()
-      : new Date().getFullYear() - 1;
-
-      const leagueMap: Record<string, number> = {
-  'Premier League': 39,
-  'La Liga': 140,
-  'Bundesliga': 78,
-  'Serie A': 135,
-  'Ligue 1': 61,
-};
+    console.log("Updating standings from Football-Data.org...");
 
     for (const league of Object.keys(leagueMap)) {
-      const leagueId = leagueMap[league];
+      const code = leagueMap[league];
 
       const res = await fetch(
-        `https://v3.football.api-sports.io/standings?league=${leagueId}&season=${season}`,
+        `https://api.football-data.org/v4/competitions/${code}/standings`,
         {
           headers: {
-            'x-apisports-key': process.env.FOOTBALL_API_KEY!,
+            'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY!,
           },
         }
       );
 
-      
-      console.log("SEASON USED:", season);
+      const data = await res.json();
 
-const data = await res.json();
+      console.log("FULL RESPONSE FOR", league, data);
 
-console.log("API RAW:", JSON.stringify(data, null, 2));
+     const table =
+  data?.standings?.find((s: any) => s.type === 'TOTAL')?.table;
 
-const table = data.response?.[0]?.league?.standings?.[0];
+      if (!table) {
+        console.log(`No data for ${league}`);
+        continue;
+      }
 
-      if (!table) continue;
-
+      // clear old data
       await supabase.from('standings').delete().eq('league', league);
 
       const rows = table.slice(0, 10).map((team: any) => ({
-        league,
-        rank: team.rank,
-        team: team.team.name,
-        logo: team.team.logo,
-        points: team.points,
-        played: team.all.played,
-        won: team.all.win,
-        drawn: team.all.draw,
-        lost: team.all.lose,
-        gd: team.goalsDiff,
-      }));
+  league,
+  rank: team.position,
+  team: team.team.name,
+  logo: team.team.crest,
 
-      await supabase.from('standings').insert(rows);
+  points: team.points,
+  played: team.playedGames,
+
+  won: team.won,
+  drawn: team.draw,
+  lost: team.lost,
+
+  gd: team.goalDifference,
+}));
+
+      const { error } = await supabase.from('standings').insert(rows);
+
+      if (error) {
+        console.error("Supabase insert error:", error);
+      }
     }
 
     return NextResponse.json({ success: true });

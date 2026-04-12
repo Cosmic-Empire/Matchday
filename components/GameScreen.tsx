@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 
 
 const LEAGUES = ['Premier League', 'La Liga', 'Bundesliga', 'Serie A', 'Ligue 1'];
@@ -68,77 +69,133 @@ export default function GamesScreen() {
   const [showLeaguePicker, setShowLeaguePicker] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
 
+  const [selectedGame, setSelectedGame] = useState<any | null>(null);
+
+  const titleRef = useRef<HTMLSpanElement | null>(null);
+  const [showPill, setShowPill] = useState(false);
+
+  useEffect(() => {
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      setShowPill(!entry.isIntersecting);
+    },
+    { threshold: 0 }
+  );
+
+  if (titleRef.current) {
+    observer.observe(titleRef.current);
+  }
+
+  return () => observer.disconnect();
+}, []);
+
   const games = FALLBACK_GAMES[selectedLeague] ?? { today: [], upcoming: [], yesterday: [] };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#0B0B0F] to-[#07070A]">
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-14 pb-4 backdrop-blur-xl bg-black/30 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#00FF87] flex items-center justify-center">
-            <span className="text-black font-black text-sm tracking-tighter">MD</span>
-          </div>
-          <span className="text-white font-bold text-xl tracking-tight">Games</span>
-        </div>
+<div className="flex items-center justify-between px-5 pt-14 pb-4">
 
-        {/* League selector */}
-        <div className="relative">
-          <button
-            onClick={(e) => {
-  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+  <div className="flex items-center gap-3">
+    <div className="w-9 h-9 rounded-xl bg-[#00FF87] flex items-center justify-center">
+      <span className="text-black font-black text-sm tracking-tighter">MD</span>
+    </div>
 
-  setDropdownPos({
-    top: rect.bottom + 8,
-    left: rect.left + rect.width / 2,
-  });
+    {/* THIS is the morph target */}
+    <span
+      ref={titleRef}
+      className="text-white font-bold text-xl tracking-tight"
+    >
+      Games
+    </span>
+  </div>
 
-  setShowLeaguePicker(!showLeaguePicker);
-}}
-            className="flex items-center gap-2 bg-white/5 border border-white/10 backdrop-blur-md rounded-xl px-3 py-2 shadow-md hover:bg-white/10 transition"
-          >
-            <span className="text-white text-sm font-semibold">{selectedLeague}</span>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-              className={`transition-transform ${showLeaguePicker ? 'rotate-180' : ''}`}>
-              <path d="M2 4L6 8L10 4" stroke="#00FF87" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </button>
+  {/* League selector (UNCHANGED) */}
+  <div className="relative">
+    <button
+      onClick={(e) => {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
 
-          {/* Dropdown */}
-          {showLeaguePicker &&
-  typeof window !== 'undefined' &&
-  createPortal(
-    <div className="fixed" style={{ top: dropdownPos.top, left: dropdownPos.left, transform: 'translateX(-50%)', width: '13rem', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.35)', zIndex: 9999 }}>
-      {LEAGUES.map(league => (
-        <button
-          key={league}
-          onClick={() => {
-            setSelectedLeague(league);
-            setShowLeaguePicker(false);
+        setDropdownPos({
+          top: rect.bottom + 8,
+          left: rect.left + rect.width / 2,
+        });
+
+        setShowLeaguePicker(!showLeaguePicker);
+      }}
+      className="flex items-center gap-2 bg-white/5 border border-white/10 backdrop-blur-md rounded-xl px-3 py-2 shadow-md hover:bg-white/10 transition"
+    >
+      <span className="text-white text-sm font-semibold">{selectedLeague}</span>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+        className={`transition-transform ${showLeaguePicker ? 'rotate-180' : ''}`}>
+        <path d="M2 4L6 8L10 4" stroke="#00FF87" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    </button>
+
+    {/* dropdown stays EXACTLY as you had it */}
+    {showLeaguePicker &&
+      typeof window !== 'undefined' &&
+      createPortal(
+        <div
+          className="fixed"
+          style={{
+            top: dropdownPos.top,
+            left: dropdownPos.left,
+            transform: 'translateX(-50%)',
+            width: '13rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '1rem',
+            overflow: 'hidden',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.35)',
+            zIndex: 9999,
           }}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-0"
         >
-          <span className="text-white text-sm">{league}</span>
+          {LEAGUES.map(league => (
+            <button
+              key={league}
+              onClick={() => {
+                setSelectedLeague(league);
+                setShowLeaguePicker(false);
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/10 transition-colors border-b border-white/5 last:border-0"
+            >
+              <span className="text-white text-sm">{league}</span>
 
-          {league === selectedLeague && (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path
-                d="M2 7L5.5 10.5L12 3.5"
-                stroke="#00FF87"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          )}
-        </button>
-      ))}
-    </div>,
-    document.body
-  )
-}
-        </div>
-      </div>
-
+              {league === selectedLeague && (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path
+                    d="M2 7L5.5 10.5L12 3.5"
+                    stroke="#00FF87"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+  </div>
+</div>
+      {showPill && (
+  <motion.div
+    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    transition={{ duration: 0.18 }}
+    className="fixed top-6 left-1/2 -translate-x-1/2 z-30"
+  >
+    <div className="px-4 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl">
+      <span className="text-white text-sm font-medium">
+        Games
+      </span>
+    </div>
+  </motion.div>
+)}
+     
       <div className="px-5 pb-8 flex flex-col gap-6">
 
         {/* TODAY */}
@@ -146,14 +203,16 @@ export default function GamesScreen() {
           {games.today.length === 0 ? (
             <EmptyState message={`No ${selectedLeague} games today`} />
           ) : (
-            games.today.map((g, i) => (
-              <GameCard key={i}
-                {...g}
-                center={g.homeScore != null ? `${g.homeScore} - ${g.awayScore}` : g.time}
-                sub={g.venue}
-                isLive={g.homeScore != null}
-              />
-            ))
+           games.today.map((g, i) => (
+  <div key={i} onClick={() => setSelectedGame(g)}>
+    <GameCard
+      {...g}
+      center={g.homeScore != null ? `${g.homeScore} - ${g.awayScore}` : g.time}
+      sub={g.venue}
+      isLive={g.homeScore != null}
+    />
+  </div>
+))
           )}
         </Section>
 
@@ -162,13 +221,16 @@ export default function GamesScreen() {
           {games.upcoming.length === 0 ? (
             <EmptyState message={`No upcoming ${selectedLeague} fixtures`} />
           ) : (
-            games.upcoming.map((g, i) => (
-              <GameCard key={i}
-                {...g}
-                center="vs"
-                sub={`${g.date} · ${g.time}`}
-              />
-            ))
+           games.upcoming.map((g, i) => (
+  <div key={i} onClick={() => setSelectedGame(g)}>
+    <GameCard
+      {...g}
+      center={g.time}
+      sub={`${g.date} · ${g.venue}`}
+      isLive={false}
+    />
+  </div>
+))
           )}
         </Section>
 
@@ -177,15 +239,88 @@ export default function GamesScreen() {
           {games.yesterday.length === 0 ? (
             <EmptyState message={`No ${selectedLeague} results yesterday`} />
           ) : (
-            games.yesterday.map((g, i) => (
-              <GameCard key={i}
-                {...g}
-                center="FT"
-                sub={g.venue}
-              />
-            ))
+         games.yesterday.map((g, i) => (
+  <div key={i} onClick={() => setSelectedGame(g)}>
+    <GameCard
+      {...g}
+      center={`${g.homeScore} - ${g.awayScore}`}
+      sub={g.venue}
+      isLive={false}
+    />
+  </div>
+))
           )}
         </Section>
+
+
+{/*(MODAL)*/}
+<AnimatePresence>
+  {selectedGame && (
+    <div
+      className="fixed inset-0 z-50"
+      onClick={() => setSelectedGame(null)}
+    >
+      {/* Background blur */}
+      <motion.div
+        className="fixed inset-0 bg-black/60 backdrop-blur-md"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      />
+
+      {/* Glass card */}
+      <motion.div
+        className="fixed top-10 left-1/2 -translate-x-1/2 w-[88%] max-w-sm rounded-3xl overflow-hidden max-h-[80vh] bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl"
+        initial={{ y: "20%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "20%", opacity: 0 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Handle */}
+        <div className="w-full flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 bg-white/30 rounded-full" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pb-3">
+          <span className="text-white font-bold text-lg">
+            {selectedGame.home} vs {selectedGame.away}
+          </span>
+
+          <button
+            onClick={() => setSelectedGame(null)}
+            className="text-white/70 text-sm"
+          >
+            Close
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-4 pb-6 space-y-4">
+
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+            <p className="text-sm text-white">Match Info</p>
+            <p className="text-xs text-zinc-400">
+              {selectedGame.venue || "Venue TBD"}
+            </p>
+          </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+            <p className="text-sm text-white">Stats</p>
+            <p className="text-xs text-zinc-400">Coming soon...</p>
+          </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+            <p className="text-sm text-white">Lineups</p>
+            <p className="text-xs text-zinc-400">Coming soon...</p>
+          </div>
+
+        </div>
+      </motion.div>
+    </div>
+  )}
+</AnimatePresence>
 
       </div>
     </div>

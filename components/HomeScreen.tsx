@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatTeamName } from '@/lib/formatTeamName';
 
 const LEAGUE_COLORS: Record<string, { bg: string; accent: string }> = {
   'Premier League': { bg: '#3d0066', accent: '#9b30ff' },
@@ -60,33 +61,34 @@ useEffect(() => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // fetch data
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const results = await Promise.allSettled(
-          LEAGUES.map(async (league) => {
-            const res = await fetch(`/api/standings?league=${encodeURIComponent(league)}`);
-            if (!res.ok) throw new Error();
-            const data = await res.json();
-            return { name: league, table: data.table || [] };
-          })
-        );
+  const fetchAll = async () => {
+    try {
+      const results = await Promise.allSettled(
+        LEAGUES.map(async (league) => {
+          const res = await fetch(
+            `/api/standings?league=${encodeURIComponent(league)}`
+          );
+          if (!res.ok) throw new Error();
+          const data = await res.json();
+          return { name: league, table: data.table || [] };
+        })
+      );
 
-        setStandings(
-          results.map(r =>
-            r.status === 'fulfilled'
-              ? r.value
-              : { name: 'Unknown', table: [] }
-          )
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+      setStandings(
+        results.map(r =>
+          r.status === 'fulfilled'
+            ? r.value
+            : { name: 'Unknown', table: [] }
+        )
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchAll();
-  }, []);
+  fetchAll();
+}, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#0B0B0F] to-[#07070A]">
@@ -209,7 +211,7 @@ useEffect(() => {
                   ) : (
                     league.table.slice(0, 4).map((row, i) => (
                       <div
-                        key={row.team}
+                       key={`${league.name}-${formatTeamName(row.team)}-${row.rank}`}
                         className="flex items-center px-4 py-2.5 hover:bg-white/5 transition"
                         style={{
                           borderTop:
@@ -222,7 +224,7 @@ useEffect(() => {
                           {row.rank}
                         </span>
                         <span className="text-white text-sm font-medium flex-1">
-                          {row.team}
+                          {formatTeamName(row.team)}
                         </span>
                         <span className="text-zinc-400 text-xs w-8 text-center">
                           {row.played}
@@ -283,14 +285,14 @@ useEffect(() => {
               <div className="overflow-y-auto max-h-[70vh]">
                 {selectedLeague.table.map((row) => (
                   <div
-                    key={row.team}
+                  key={`${selectedLeague.name}-${formatTeamName(row.team)}-${row.rank}`}
                     className="flex items-center px-4 py-3 border-t border-white/10"
                   >
                     <span className="text-zinc-300 text-xs w-6">
                       {row.rank}
                     </span>
                     <span className="text-white text-sm flex-1 truncate">
-                      {row.team}
+                      {formatTeamName(row.team)}
                     </span>
                     <span className="text-zinc-300 text-xs w-10 text-center">
                       {row.played}

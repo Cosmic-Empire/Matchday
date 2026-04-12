@@ -153,6 +153,17 @@ export default function ClubScreen() {
   const [standing, setStanding] = useState<Standing | null>(null);
   const [loadingData, setLoadingData] = useState(false);
 
+  const [scrolled, setScrolled] = useState(false);
+
+useEffect(() => {
+  const handleScroll = () => {
+    setScrolled(window.scrollY > 40);
+  };
+
+  window.addEventListener('scroll', handleScroll);
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+
   useEffect(() => {
     const saved = localStorage.getItem('matchday_club');
     if (saved) setSavedClub(JSON.parse(saved));
@@ -247,14 +258,45 @@ export default function ClubScreen() {
   if (!savedClub) {
     return (
       <div className="min-h-screen bg-[#0A0A0A]">
-        <div className="flex items-center gap-3 px-5 pt-14 pb-4">
-          <div className="w-9 h-9 rounded-xl bg-[#00FF87] flex items-center justify-center">
-            <span className="text-black font-black text-sm tracking-tighter">MD</span>
-          </div>
-          <span className="text-white font-bold text-xl tracking-tight">Your Club</span>
-        </div>
+       <div className="relative px-5 pt-14 pb-2 flex items-center justify-between">
 
-        <div className="px-5">
+  {/* LEFT */}
+  <div className="flex items-center gap-3">
+    <div className="w-9 h-9 rounded-xl bg-[#00FF87] flex items-center justify-center">
+      <span className="text-black font-black text-sm tracking-tighter">MD</span>
+    </div>
+
+    <span
+      className={`text-white font-bold text-xl tracking-tight transition-all duration-300 ${
+        scrolled ? 'opacity-0' : 'opacity-100'
+      }`}
+    >
+      Your Club
+    </span>
+  </div>
+
+  {/* RIGHT */}
+  {savedClub && (
+    <button
+      onClick={changeClub}
+      className="text-zinc-500 text-xs border border-zinc-800 px-3 py-1.5 rounded-full hover:border-zinc-600 transition-colors"
+    >
+      Change
+    </button>
+  )}
+</div>
+
+<div className="fixed left-1/2 top-6 -translate-x-1/2 z-50">
+  <span
+    className={`px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-white text-sm font-bold transition-all duration-300 ${
+      scrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'
+    }`}
+  >
+    Your Club
+  </span>
+</div>
+
+        <div className={`px-5 pb-8 transition-all duration-300 ${scrolled ? 'mt-25' : 'mt-0'}`}>
           <p className="text-zinc-500 text-sm mb-5">Search for your club or pick from popular teams</p>
 
           {/* Search */}
@@ -353,22 +395,48 @@ export default function ClubScreen() {
   const clubColor = savedClub.color1 && savedClub.color1.startsWith('#') ? savedClub.color1 : '#00FF87';
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-14 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#00FF87] flex items-center justify-center">
-            <span className="text-black font-black text-sm tracking-tighter">MD</span>
-          </div>
-          <span className="text-white font-bold text-xl tracking-tight">Your Club</span>
-        </div>
-        <button onClick={changeClub}
-          className="text-zinc-500 text-xs border border-zinc-800 px-3 py-1.5 rounded-full hover:border-zinc-600 transition-colors">
-          Change
-        </button>
-      </div>
 
-      <div className="px-5 pb-8">
+
+    <div className="min-h-screen bg-[#0A0A0A]">
+     <div className="relative px-5 pt-14 pb-2 flex items-center justify-between">
+
+  {/* LEFT */}
+  <div className="flex items-center gap-3">
+    <div className="w-9 h-9 rounded-xl bg-[#00FF87] flex items-center justify-center">
+      <span className="text-black font-black text-sm tracking-tighter">MD</span>
+    </div>
+
+    <span
+      className={`text-white font-bold text-xl tracking-tight transition-all duration-300 ${
+        scrolled ? 'opacity-0' : 'opacity-100'
+      }`}
+    >
+      Your Club
+    </span>
+  </div>
+
+  {/* RIGHT */}
+  {savedClub && (
+    <button
+      onClick={changeClub}
+      className="text-zinc-500 text-xs border border-zinc-800 px-3 py-1.5 rounded-full hover:border-zinc-600 transition-colors"
+    >
+      Change
+    </button>
+  )}
+</div>
+
+<div className="fixed left-1/2 top-6 -translate-x-1/2 z-50">
+  <span
+    className={`px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-white text-sm font-bold transition-all duration-300 ${
+      scrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'
+    }`}
+  >
+    Your Club
+  </span>
+</div>
+
+      <div className={`px-5 pb-8 transition-all duration-300 ${scrolled ? 'mt-18' : 'mt-0'}`}>
         {/* Club header card with color accent */}
         <div className="rounded-2xl p-5 mb-6 border overflow-hidden relative"
           style={{ backgroundColor: '#111111', borderColor: `${clubColor}40` }}>

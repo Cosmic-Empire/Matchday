@@ -117,6 +117,17 @@ export default function CreateScreen() {
   const [gradientStart, setGradientStart] = useState('#0a0a0a');
 const [gradientEnd, setGradientEnd] = useState('#1a1a2e');
 
+const [scrolled, setScrolled] = useState(false);
+
+useEffect(() => {
+  const handleScroll = () => {
+    setScrolled(window.scrollY > 40);
+  };
+
+  window.addEventListener('scroll', handleScroll);
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+
   useEffect(() => { fetchFixtures(); }, [selectedLeague]);
 
   useEffect(() => {
@@ -365,19 +376,50 @@ ctx.fillText('FT', SIZE/2, ftY + 2);
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-14 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#00FF87] flex items-center justify-center">
-            <span className="text-black font-black text-sm tracking-tighter">MD</span>
-          </div>
-          <span className="text-white font-bold text-xl tracking-tight">Create</span>
-        </div>
-        {step !== 'pick' && (
-          <button onClick={() => setStep(step === 'preview' ? 'template' : 'pick')}
-            className="text-zinc-400 text-sm font-medium">← Back</button>
-        )}
+   {/* HEADER */}
+<div className="relative px-5 pt-14
+ pb-2 flex items-center justify-between">
+
+    {/* LEFT */}
+    <div className="flex items-center gap-3">
+      <div className="w-9 h-9 rounded-xl bg-[#00FF87] flex items-center justify-center">
+        <span className="text-black font-black text-sm">MD</span>
       </div>
+
+      {/* TEXT */}
+      <span
+        className={`text-white font-bold text-xl transition-all duration-300 ${
+          scrolled ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        Create
+      </span>
+    </div>
+
+    {/* RIGHT */}
+    {step !== 'pick' && (
+      <button
+        onClick={() => setStep(step === 'preview' ? 'template' : 'pick')}
+        className="text-zinc-400 text-sm font-medium"
+      >
+        ← Back
+      </button>
+    )}
+
+    {/* CENTER PILL */}
+    <div className="fixed left-1/2 top-6 -translate-x-1/2 z-50">
+  <span
+    className={`px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-white text-sm font-bold transition-all duration-300 ${
+      scrolled ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'
+    }`}
+  >
+    Create
+  </span>
+</div>
+
+</div>
+
+        
 
       {/* Step indicators */}
       <div className="flex items-center gap-2 px-5 mb-6">
@@ -395,11 +437,11 @@ ctx.fillText('FT', SIZE/2, ftY + 2);
         </span>
       </div>
 
-      <div className="px-5 pb-8">
+      <div className={`px-5 pb-8 transition-all duration-300 ${scrolled ? 'mt-20' : 'mt-0'}`}>
         {/* Step 1 */}
         {step === 'pick' && (
           <div>
-            <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-hide mb-4">
+            <div className="flex flex-wrap gap-2 mb-4 max-w-md">
               {LEAGUES.map(league => (
                 <button key={league} onClick={() => setSelectedLeague(league)}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
