@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatTeamName } from '@/lib/formatTeamName';
+import { useSettings } from "@/hooks/useSettings";
+import { useMemo } from "react";
+
 
 const LEAGUE_COLORS: Record<string, { bg: string; accent: string }> = {
   'Premier League': { bg: '#3d0066', accent: '#9b30ff' },
@@ -28,6 +31,9 @@ interface LeagueData {
 
 export default function HomeScreen() {
 
+  const { settings, setSettings } = useSettings();
+const defaultLeague = settings.defaultLeague;
+
 console.log("🔥 HOME SCREEN RENDERED - TEST 2026-04-12");
 
   const [standings, setStandings] = useState<LeagueData[]>([]);
@@ -37,6 +43,12 @@ console.log("🔥 HOME SCREEN RENDERED - TEST 2026-04-12");
   const [scrolled, setScrolled] = useState(false);
   const subHeaderRef = useRef<HTMLDivElement | null>(null);
 const [showPill, setShowPill] = useState(false);
+const [leagueOpen, setLeagueOpen] = useState(false);
+const enabledLeagues = useMemo(() => {
+  return LEAGUES.filter(
+    (league) => settings?.leagues?.[league]
+  );
+}, [settings.leagues]);
 
 useEffect(() => {
   const observer = new IntersectionObserver(
@@ -71,7 +83,7 @@ console.log("🔥 USEEFFECT RAN - FETCH START");
   const fetchAll = async () => {
     try {
       const results = await Promise.allSettled(
-        LEAGUES.map(async (league) => {
+        enabledLeagues.map(async (league) => {
           const res = await fetch(
             `/api/standings?league=${encodeURIComponent(league)}`
           );
@@ -94,7 +106,7 @@ console.log("🔥 USEEFFECT RAN - FETCH START");
   };
 
   fetchAll();
-}, []);
+}, [settings.leagues]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#0B0B0F] to-[#07070A]">
@@ -314,62 +326,128 @@ console.log("🔥 USEEFFECT RAN - FETCH START");
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showSettings && (
-          <div className="fixed inset-0 z-50">
-            <motion.div
-              className="absolute inset-0 bg-black/60 backdrop-blur-md"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowSettings(false)}
-            />
+ <AnimatePresence>
+  {showSettings && (
+    <div className="fixed inset-0 z-50">
+      <motion.div
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => setShowSettings(false)}
+      />
 
-            <motion.div
-              className="fixed top-10 left-1/2 -translate-x-1/2 w-[88%] max-w-sm rounded-3xl overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl"
-              initial={{ y: "20%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "20%", opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            >
-              <div className="w-full flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 bg-white/20 rounded-full" />
-              </div>
+      <motion.div
+        className="fixed top-10 left-1/2 -translate-x-1/2 w-[88%] max-w-sm rounded-3xl overflow-hidden bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl"
+        initial={{ y: "20%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "20%", opacity: 0 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* HEADER */}
+        <div className="w-full flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 bg-white/20 rounded-full" />
+        </div>
 
-              <div className="px-4 pb-3 flex items-center justify-between">
-                <span className="text-white font-bold text-lg">Settings</span>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className="text-zinc-400 text-sm"
-                >
-                  Close
-                </button>
-              </div>
+        <div className="px-4 pb-3 flex items-center justify-between">
+          <span className="text-white font-bold text-lg">Settings</span>
+          <button
+            onClick={() => setShowSettings(false)}
+            className="text-zinc-400 text-sm"
+          >
+            Close
+          </button>
+        </div>
 
-              <div className="px-4 pb-6 space-y-4">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                  <p className="text-sm text-white">Default League</p>
-                  <p className="text-xs text-zinc-400">Premier League</p>
-                </div>
+        {/* CONTENT */}
+        <div className="px-4 space-y-3">
 
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                  <p className="text-sm text-white">Compact Mode</p>
-                  <p className="text-xs text-zinc-400">
-                    Top 4 standings view
-                  </p>
-                </div>
+  <div className="mb-2">
+    <p className="text-white font-semibold text-md">Leagues</p>
+    <p className="text-xs text-zinc-400">Choose what appears on your home screen</p>
+  </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                  <p className="text-sm text-white">Data Refresh</p>
-                  <p className="text-xs text-zinc-400">
-                    Auto-updating enabled
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+  {Object.keys(settings.leagues ?? {}).map((league) => {
+    const enabled = settings?.leagues?.[league];
+
+    return (
+      <div
+        key={league}
+        className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-4 py-3"
+      >
+        <span className="text-white text-sm font-medium">
+          {league}
+        </span>
+
+        {/* Apple-style toggle */}
+        <button
+          onClick={() =>
+            setSettings(prev => ({
+              ...prev,
+  leagues: {
+    ...(prev.leagues ?? {}),
+    [league]: !(prev.leagues?.[league] ?? true),
+}
+            }))
+          }
+          className={`w-11 h-6 flex items-center rounded-full transition ${
+            enabled ? "bg-[#00FF87]" : "bg-white/10"
+          }`}
+        >
+          <div
+            className={`w-5 h-5 bg-white rounded-full shadow-md transform transition ${
+              enabled ? "translate-x-5" : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+    );
+  })}
+
+<p className="text-xs text-zinc-400 center">More leagues coming soon!</p>
+
+</div>
+
+          {/* ================= DATA ================= */}
+          < div className="px-4 space-y-1 pb-4 mt-3"> 
+          <p className="text-white font-semibold text-md">
+              Data
+            </p>
+
+            <div className="space-y-5 mt-3">
+
+              <button
+                onClick={async () => {
+                  const res = await fetch("/api/update", { method: "POST" });
+
+if (res.status === 429) {
+  alert("Please wait before refreshing data again.");
+  return;
+}
+                }}
+                className="w-full bg-white/5 border border-white/10 text-white text-sm py-2 rounded-xl hover:bg-white/10 transition"
+              >
+                Refresh Data
+              </button>
+
+              <button
+                onClick={() => {
+                  localStorage.removeItem("matchday-settings");
+                  window.location.reload();
+                }}
+                className="w-full bg-red-500/10 border border-red-500/30 text-red-300 text-sm py-2 rounded-xl"
+              >
+                Reset Settings
+              </button>
+
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+
+      </motion.div>
+    </div>
+  )}
+</AnimatePresence>
       </div>
       );
       }

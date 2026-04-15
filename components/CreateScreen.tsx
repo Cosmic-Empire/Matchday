@@ -421,64 +421,309 @@ ctx.fillText('FT', SIZE/2, ftY + 2);
 
         
 
-      {/* Step indicators */}
-      <div className="flex items-center gap-2 px-5 mb-6">
-        {['pick', 'template', 'preview'].map((s, i) => (
-          <div key={s} className="flex items-center gap-2">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-              step === s ? 'bg-[#00FF87] text-black' :
-              ['pick','template','preview'].indexOf(step) > i ? 'bg-zinc-700 text-white' : 'bg-zinc-900 text-zinc-600'
-            }`}>{i + 1}</div>
-            {i < 2 && <div className={`w-8 h-0.5 rounded ${['pick','template','preview'].indexOf(step) > i ? 'bg-[#00FF87]' : 'bg-zinc-800'}`} />}
-          </div>
-        ))}
-        <span className="text-zinc-500 text-xs ml-2">
-          {step === 'pick' ? 'Pick a match' : step === 'template' ? 'Choose style' : 'Preview & download'}
-        </span>
-      </div>
+{/* STEP INDICATORS + CONTENT WRAPPED TOGETHER */}
+<div className={`transition-all duration-300 ${scrolled ? 'mt-24' : 'mt-0'}`}>
 
-      <div className={`px-5 pb-8 transition-all duration-300 ${scrolled ? 'mt-20' : 'mt-0'}`}>
-        {/* Step 1 */}
-        {step === 'pick' && (
-          <div>
-            <div className="flex flex-wrap gap-2 mb-4 max-w-md">
-              {LEAGUES.map(league => (
-                <button key={league} onClick={() => setSelectedLeague(league)}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                    selectedLeague === league ? 'bg-[#00FF87] text-black' : 'bg-zinc-900 text-zinc-400 border border-zinc-800'
-                  }`}>{league}</button>
-              ))}
-            </div>
-            <h3 className="text-white font-bold text-base mb-3">Recent Results</h3>
-            {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="w-8 h-8 border-2 border-[#00FF87] border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : fixtures.length === 0 ? (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
-                <p className="text-zinc-500 text-sm">No recent results for {selectedLeague}</p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {fixtures.map(fixture => (
-                  <button key={fixture.id}
-                    onClick={() => { setSelectedFixture(fixture); setStep('template'); }}
-                    className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-left hover:border-zinc-600 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-zinc-500 text-xs">{formatDate(fixture.match_date)}</span>
-                      <span className="text-zinc-500 text-xs">{fixture.venue}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-white font-semibold text-sm flex-1">{shortenTeamName(fixture.home_team)}</span>
-                      <span className="text-white font-black text-xl mx-4">{fixture.home_score} - {fixture.away_score}</span>
-                      <span className="text-white font-semibold text-sm flex-1 text-right">{shortenTeamName(fixture.away_team)}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+  {/* Step indicators */}
+  <div className="flex items-center gap-2 px-5 mb-6">
+    {['pick', 'template', 'preview'].map((s, i) => (
+      <div key={s} className="flex items-center gap-2">
+        <div
+          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+            step === s
+              ? 'bg-[#00FF87] text-black'
+              : ['pick','template','preview'].indexOf(step) > i
+              ? 'bg-zinc-700 text-white'
+              : 'bg-zinc-900 text-zinc-600'
+          }`}
+        >
+          {i + 1}
+        </div>
+
+        {i < 2 && (
+          <div
+            className={`w-8 h-0.5 rounded ${
+              ['pick','template','preview'].indexOf(step) > i
+                ? 'bg-[#00FF87]'
+                : 'bg-zinc-800'
+            }`}
+          />
+        )}
+      </div>
+    ))}
+
+    <span className="text-zinc-500 text-xs ml-2">
+      {step === 'pick'
+        ? 'Pick a match'
+        : step === 'template'
+        ? 'Choose style'
+        : 'Preview & download'}
+    </span>
+  </div>
+
+  {/* MAIN CONTENT */}
+  <div className="px-5 pb-8">
+    {/* Step 1 */}
+    {step === 'pick' && (
+      <div>
+        <div className="flex flex-wrap gap-2 mb-4 max-w-md">
+          {LEAGUES.map(league => (
+            <button
+              key={league}
+              onClick={() => setSelectedLeague(league)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                selectedLeague === league
+                  ? 'bg-[#00FF87] text-black'
+                  : 'bg-zinc-900 text-zinc-400 border border-zinc-800'
+              }`}
+            >
+              {league}
+            </button>
+          ))}
+        </div>
+
+        <h3 className="text-white font-bold text-base mb-3">
+          Recent Results
+        </h3>
+
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-2 border-[#00FF87] border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : fixtures.length === 0 ? (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
+            <p className="text-zinc-500 text-sm">
+              No recent results for {selectedLeague}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {fixtures.map(fixture => (
+              <button
+                key={fixture.id}
+                onClick={() => {
+                  setSelectedFixture(fixture);
+                  setStep('template');
+                }}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-left hover:border-zinc-600 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-zinc-500 text-xs">
+                    {formatDate(fixture.match_date)}
+                  </span>
+                  <span className="text-zinc-500 text-xs">
+                    {fixture.venue}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-white font-semibold text-sm flex-1">
+                    {shortenTeamName(fixture.home_team)}
+                  </span>
+
+                  <span className="text-white font-black text-xl mx-4">
+                    {fixture.home_score} - {fixture.away_score}
+                  </span>
+
+                  <span className="text-white font-semibold text-sm flex-1 text-right">
+                    {shortenTeamName(fixture.away_team)}
+                  </span>
+                </div>
+              </button>
+            ))}
           </div>
         )}
+      </div>
+    )}
+
+    {/* Step 2 + Step 3 stay EXACTLY as you had them below */}
+
+     {/* Step 2 */}
+{step === 'template' && selectedFixture && (
+  <div>
+    <h3 className="text-white font-bold text-base mb-4">Choose a style</h3>
+    <div className="flex flex-col gap-3 mb-6">
+      {TEMPLATES.map(template => (
+        <button key={template.id} onClick={() => setSelectedTemplate(template)}
+          className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
+            selectedTemplate.id === template.id ? 'border-[#00FF87] bg-zinc-900' : 'border-zinc-800 bg-zinc-900'
+          }`}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background: template.id === 'photo'
+                ? 'linear-gradient(135deg, #1a3a5c, #2d6a9f)'
+                : `linear-gradient(135deg, ${gradientStart}, ${gradientEnd})`
+            }}>
+            <span className="text-lg">{template.id === 'photo' ? '📸' : '🎨'}</span>
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-semibold text-sm">{template.name}</p>
+            <p className="text-zinc-500 text-xs">{template.description}</p>
+          </div>
+          {selectedTemplate.id === template.id && (
+            <div className="w-5 h-5 bg-[#00FF87] rounded-full flex items-center justify-center">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6L5 9L10 3" stroke="black" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+          )}
+        </button>
+      ))}
+    </div>
+
+    {/* Color pickers — only show when gradient is selected */}
+    {selectedTemplate.id === 'gradient' && (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-6">
+        <p className="text-white font-semibold text-sm mb-4">Choose your colors</p>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <p className="text-zinc-500 text-xs mb-2">Start color</p>
+            <div className="relative">
+              <input
+                type="color"
+                value={gradientStart}
+                onChange={e => setGradientStart(e.target.value)}
+                className="w-full h-12 rounded-xl cursor-pointer border-0"
+                style={{ padding: '2px' }}
+              />
+            </div>
+          </div>
+          <div className="flex-1">
+            <p className="text-zinc-500 text-xs mb-2">End color</p>
+            <div className="relative">
+              <input
+                type="color"
+                value={gradientEnd}
+                onChange={e => setGradientEnd(e.target.value)}
+                className="w-full h-12 rounded-xl cursor-pointer border-0"
+                style={{ padding: '2px' }}
+              />
+            </div>
+          </div>
+        </div>
+        {/* Live mini preview */}
+        <div className="mt-4 h-16 rounded-xl"
+          style={{ background: `linear-gradient(135deg, ${gradientStart}, ${gradientEnd})` }} />
+      </div>
+    )}
+
+    <button onClick={() => setStep('preview')}
+      className="w-full bg-[#00FF87] text-black font-bold py-4 rounded-2xl text-sm">
+      Preview Card →
+    </button>
+  </div>
+)}
+
+        {/* Step 3 */}
+        {step === 'preview' && selectedFixture && (
+          <div>
+            <h3 className="text-white font-bold text-base mb-4">Your card</h3>
+
+            <div id="card-preview" className="relative aspect-square rounded-2xl overflow-hidden mb-4 bg-zinc-900">
+              {/* Background */}
+              {selectedTemplate.id === 'photo' && (
+                fetchingPhoto ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-8 h-8 border-2 border-[#00FF87] border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : photoUrl ? (
+                  <img src={photoUrl} alt="Stadium" className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
+                )
+              )}
+              {selectedTemplate.id !== 'photo' && (
+  <div className="absolute inset-0" style={{
+    background: `linear-gradient(135deg, ${gradientStart}, ${gradientEnd})`
+  }} />
+)}
+
+              {selectedTemplate.id === 'photo' && (
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/85" />
+              )}
+
+              {/* Content */}
+              <div className="absolute inset-0 flex flex-col p-4">
+                <div className="w-full h-0.5 rounded-full mb-3" style={{ backgroundColor: accent }} />
+
+                {/* League pill */}
+                <div className="self-start px-2.5 py-1 rounded-full border text-[10px] font-bold mb-1.5"
+                  style={{ borderColor: accent, color: accent, backgroundColor: 'rgba(0,0,0,0.45)' }}>
+                  {selectedFixture.league || selectedLeague}
+                </div>
+
+                {/* Venue */}
+                <p className="text-white/85 font-bold italic text-xs mb-0.5">{selectedFixture.venue}</p>
+
+                {/* Date */}
+                <p className="text-white/55 text-[10px] mb-auto">{formatDate(selectedFixture.match_date)}</p>
+
+                {/* Crests + Score */}
+                <div className="flex items-center justify-between mb-2 px-2">
+                  <div className="flex flex-col items-center gap-1">
+                    {crests.home ? (
+                      <img src={crests.home} alt="home" className="w-10 h-10 object-contain" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                        <span className="text-white text-[8px] font-bold">{selectedFixture.home_team.slice(0,3).toUpperCase()}</span>
+                      </div>
+                    )}
+                    <span className="text-white font-black text-[10px] uppercase text-center leading-tight max-w-[60px]">
+                      {shortenTeamName(selectedFixture.home_team)}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-black text-4xl">{selectedFixture.home_score}</span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={{ color: accent, backgroundColor: 'rgba(0,0,0,0.4)' }}>FT</span>
+                      </div>
+                      <span className="text-white font-black text-4xl">{selectedFixture.away_score}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-1">
+                    {crests.away ? (
+                      <img src={crests.away} alt="away" className="w-10 h-10 object-contain" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                        <span className="text-white text-[8px] font-bold">{selectedFixture.away_team.slice(0,3).toUpperCase()}</span>
+                      </div>
+                    )}
+                    <span className="text-white font-black text-[10px] uppercase text-center leading-tight max-w-[60px]">
+                      {shortenTeamName(selectedFixture.away_team)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="w-full h-px bg-white/10 mb-2" />
+
+                <div className="flex items-center justify-center gap-1.5">
+                  <div className="w-3 h-3 rounded bg-[#00FF87] flex items-center justify-center">
+                    <span className="text-black font-black text-[6px]">MD</span>
+                  </div>
+                  <span className="text-white/35 text-[9px] font-semibold">Matchday</span>
+                </div>
+              </div>
+            </div>
+
+            {photoCredit && selectedTemplate.id === 'photo' && (
+              <p className="text-zinc-600 text-xs text-center mb-3">Photo by {photoCredit} on Unsplash</p>
+            )}
+
+            <button onClick={downloadCard} disabled={downloading || fetchingPhoto}
+  className="w-full bg-[#00FF87] text-black font-bold py-4 rounded-2xl text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+              {downloading ? (
+                <><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />Generating...</>
+              ) : '↓ Download Card'}
+            </button>
+            <p className="text-zinc-600 text-xs text-center mt-3">Saved as PNG · 1080×1080px</p>
+          </div>
+        )}
+  </div>
+</div>
 
  {/* Step 2 */}
 {step === 'template' && selectedFixture && (
@@ -665,6 +910,5 @@ ctx.fillText('FT', SIZE/2, ftY + 2);
           </div>
         )}
       </div>
-    </div>
   );
 }
