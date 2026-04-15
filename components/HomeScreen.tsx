@@ -32,7 +32,6 @@ interface LeagueData {
 export default function HomeScreen() {
 
   const { settings, setSettings } = useSettings();
-const defaultLeague = settings.defaultLeague;
 
 console.log("🔥 HOME SCREEN RENDERED - TEST 2026-04-12");
 
