@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { formatTeamName } from '@/lib/formatTeamName'; // adjust path if needed
 
 
 const LEAGUES = ['Premier League', 'La Liga', 'Bundesliga', 'Serie A', 'Ligue 1'];
@@ -74,22 +75,57 @@ export default function GamesScreen() {
   const titleRef = useRef<HTMLSpanElement | null>(null);
   const [showPill, setShowPill] = useState(false);
 
-  useEffect(() => {
+  const [games, setGames] = useState({
+  today: [],
+  upcoming: [],
+  yesterday: []
+});
+
+const [error, setError] = useState(false);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const fetchGames = async () => {
+    try {
+      setLoading(true);
+      setError(false);
+
+      const res = await fetch(`/api/games?league=${selectedLeague}`);
+      const data = await res.json();
+
+      setGames({
+        today: data?.today ?? [],
+        upcoming: data?.upcoming ?? [],
+        yesterday: data?.yesterday ?? [],
+      });
+
+    } catch (err) {
+      console.error(err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchGames();
+}, [selectedLeague]);
+
+ useEffect(() => {
+  if (!titleRef.current) return;
+
   const observer = new IntersectionObserver(
     ([entry]) => {
       setShowPill(!entry.isIntersecting);
     },
-    { threshold: 0 }
+    { threshold: 0.1 }
   );
 
-  if (titleRef.current) {
-    observer.observe(titleRef.current);
-  }
+  observer.observe(titleRef.current);
 
   return () => observer.disconnect();
-}, []);
+}, [titleRef.current]);
 
-  const games = FALLBACK_GAMES[selectedLeague] ?? { today: [], upcoming: [], yesterday: [] };
+const isEmpty = !loading && !error;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#0B0B0F] to-[#07070A]">
@@ -200,7 +236,7 @@ export default function GamesScreen() {
 
         {/* TODAY */}
         <Section title="Today" accent="#00FF87">
-          {games.today.length === 0 ? (
+          {(games.today ?? []).length === 0 ? (
             <EmptyState message={`No ${selectedLeague} games today`} />
           ) : (
            games.today.map((g, i) => (
@@ -218,7 +254,7 @@ export default function GamesScreen() {
 
         {/* UPCOMING */}
         <Section title="Upcoming" accent="#60a5fa">
-          {games.upcoming.length === 0 ? (
+        {(games.upcoming ?? []).length === 0 ? (
             <EmptyState message={`No upcoming ${selectedLeague} fixtures`} />
           ) : (
            games.upcoming.map((g, i) => (
@@ -236,7 +272,7 @@ export default function GamesScreen() {
 
         {/* YESTERDAY */}
         <Section title="Yesterday" accent="#a78bfa">
-          {games.yesterday.length === 0 ? (
+          {(games.yesterday ?? []).length === 0 ? (
             <EmptyState message={`No ${selectedLeague} results yesterday`} />
           ) : (
          games.yesterday.map((g, i) => (
@@ -285,9 +321,8 @@ export default function GamesScreen() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 pb-3">
           <span className="text-white font-bold text-lg">
-            {selectedGame.home} vs {selectedGame.away}
+            {formatTeamName(selectedGame.home)} vs {formatTeamName(selectedGame.away)}
           </span>
-
           <button
             onClick={() => setSelectedGame(null)}
             className="text-white/70 text-sm"
@@ -297,24 +332,70 @@ export default function GamesScreen() {
         </div>
 
         {/* Content */}
-        <div className="px-4 pb-6 space-y-4">
+        <div className="px-4 pb-6 space-y-3">
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-            <p className="text-sm text-white">Match Info</p>
-            <p className="text-xs text-zinc-400">
-              {selectedGame.venue || "Venue TBD"}
-            </p>
+          {/* Score — only if played */}
+          {selectedGame.homeScore != null && selectedGame.awayScore != null ? (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-white font-black text-4xl">{selectedGame.homeScore}</span>
+                <span className="text-zinc-400 text-xs mt-1">{formatTeamName(selectedGame.home)}</span>
+              </div>
+              <span className="text-zinc-500 text-lg font-bold">—</span>
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-white font-black text-4xl">{selectedGame.awayScore}</span>
+                <span className="text-zinc-400 text-xs mt-1">{formatTeamName(selectedGame.away)}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-zinc-300 text-sm font-semibold">{formatTeamName(selectedGame.home)}</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-[#00FF87] text-lg font-black">{selectedGame.time}</span>
+                <span className="text-zinc-500 text-[10px] mt-0.5">{selectedGame.date}</span>
+              </div>
+              <div className="flex flex-col items-center flex-1">
+                <span className="text-zinc-300 text-sm font-semibold">{formatTeamName(selectedGame.away)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Match Info */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
+            <p className="text-white text-sm font-semibold">Match Info</p>
+            <div className="flex justify-between">
+              <span className="text-zinc-500 text-xs">Venue</span>
+              <span className="text-zinc-300 text-xs">{selectedGame.venue || "TBD"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-zinc-500 text-xs">League</span>
+              <span className="text-zinc-300 text-xs">{selectedLeague}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-zinc-500 text-xs">Status</span>
+              <span className="text-zinc-300 text-xs capitalize">{selectedGame.status?.toLowerCase() || "Scheduled"}</span>
+            </div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-            <p className="text-sm text-white">Stats</p>
-            <p className="text-xs text-zinc-400">Coming soon...</p>
-          </div>
-
-          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-            <p className="text-sm text-white">Lineups</p>
-            <p className="text-xs text-zinc-400">Coming soon...</p>
-          </div>
+          {/* Stats & Lineups — only if played */}
+          {selectedGame.homeScore != null ? (
+            <>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <p className="text-sm text-white font-semibold">Stats</p>
+                <p className="text-xs text-zinc-400 mt-1">Coming soon...</p>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <p className="text-sm text-white font-semibold">Lineups</p>
+                <p className="text-xs text-zinc-400 mt-1">Coming soon...</p>
+              </div>
+            </>
+          ) : (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+              <p className="text-xs text-zinc-500 text-center">Stats & lineups available after kickoff</p>
+            </div>
+          )}
 
         </div>
       </motion.div>
@@ -355,7 +436,7 @@ function GameCard({ home, away, homeScore, awayScore, center, sub, isLive }: any
           {homeScore != null && (
             <span className="text-white font-black text-3xl leading-none">{homeScore}</span>
           )}
-          <span className="text-zinc-300 text-xs">{home}</span>
+          <span className="text-zinc-300 text-xs">{formatTeamName(home)}</span>
         </div>
 
         <div className="flex flex-col items-center px-4 min-w-[80px]">
@@ -374,7 +455,7 @@ function GameCard({ home, away, homeScore, awayScore, center, sub, isLive }: any
           {awayScore != null && (
             <span className="text-white font-black text-3xl leading-none">{awayScore}</span>
           )}
-          <span className="text-zinc-300 text-xs text-right">{away}</span>
+          <span className="text-zinc-300 text-xs text-right">{formatTeamName(away)}</span>
         </div>
 
       </div>

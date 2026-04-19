@@ -11,6 +11,8 @@ export const formatTeamName = (name: string) => {
     "Brighton & Hove Albion FC": "Brighton",
     "West Ham United FC": "West Ham",
     "Aston Villa FC": "Aston Villa",
+    "AFC Bournemouth": "Bournemouth",
+    "Wolverhampton Wanderers FC": "Wolves",
 
     // La Liga
     "Real Madrid CF": "Real Madrid",
