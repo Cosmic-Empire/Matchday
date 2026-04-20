@@ -75,10 +75,14 @@ export default function GamesScreen() {
   const titleRef = useRef<HTMLSpanElement | null>(null);
   const [showPill, setShowPill] = useState(false);
 
-  const [games, setGames] = useState({
+  const [games, setGames] = useState<{
+  today: any[];
+  upcoming: any[];
+  yesterday: any[];
+}>({
   today: [],
   upcoming: [],
-  yesterday: []
+  yesterday: [],
 });
 
 const [error, setError] = useState(false);
