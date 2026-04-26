@@ -295,7 +295,7 @@ function SquadSlotCard({ player, position, onClick, disabled }: {
 // Header — stable, defined outside main so it never remounts
 function AppHeader({ screen, pageTitle, logoRef, onBack, onLeave }: {
   screen: Screen; pageTitle: string;
-  logoRef: React.RefObject<HTMLDivElement>;  // IntersectionObserver watches this
+  logoRef: React.RefObject<HTMLDivElement | null>;  // IntersectionObserver watches this
   onBack: () => void; onLeave: () => void;
 }) {
   return (
