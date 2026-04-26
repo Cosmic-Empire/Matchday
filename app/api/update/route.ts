@@ -56,6 +56,15 @@ export async function POST(req: NextRequest) {
         }));
         const { error } = await supabase.from('standings').insert(rows);
         if (error) console.error("Standings insert error:", error);
+else console.log(`✅ Inserted ${rows.length} rows for ${league}`);
+        
+
+        const standingsRes = await fetch(
+  `https://api.football-data.org/v4/competitions/${code}/standings`,
+  { headers: { 'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY! } }
+);
+const standingsData = await standingsRes.json();
+console.log(`${league} standings response:`, JSON.stringify(standingsData).slice(0, 200));
       }
 
       // ── Matches (INSIDE the loop, with auth header) ────────
