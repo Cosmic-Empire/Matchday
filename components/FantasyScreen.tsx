@@ -102,13 +102,23 @@ type Screen = 'landing' | 'create' | 'join' | 'pick' | 'lobby';
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: 'easeOut' } },
-  exit:    { opacity: 0, y: -8, transition: { duration: 0.14 } },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.22, ease: 'easeOut' as any },
+  },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.14 } },
 };
+
 const pillVariants = {
-  hidden:  { opacity: 0, y: -8, scale: 0.9 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: 'easeOut' as any } },
-  exit:    { opacity: 0, y: -8, scale: 0.9, transition: { duration: 0.12 } },
+  hidden: { opacity: 0, y: -8, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.2, ease: 'easeOut' as any },
+  },
+  exit: { opacity: 0, y: -8, scale: 0.9, transition: { duration: 0.12 } },
 };
 
 function PlayerImage({ player, size = 48 }: { player: Player; size?: number }) {
