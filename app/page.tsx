@@ -137,12 +137,12 @@ export default function App() {
     center: {
       x: 0,
       opacity: 1,
-      transition: { duration: 0.28, ease: [0.32, 0.72, 0, 1] },
+      transition: { duration: 0.28, ease: [0.32, 0.72, 0, 1] as const },
     },
     exit: (dir: number) => ({
       x: dir > 0 ? '-100%' : '100%',
       opacity: 0,
-      transition: { duration: 0.22, ease: [0.4, 0, 1, 1] },
+      transition: { duration: 0.22, ease: [0.4, 0, 1, 1] as const },
     }),
   };
 
