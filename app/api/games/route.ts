@@ -77,7 +77,9 @@ startOfWeekAhead.setHours(0, 0, 0, 0);
     }
 
     // 🎯 FORMAT FOR FRONTEND
-  function formatGame(g: any) {
+  const LIVE_STATUSES = new Set(['IN_PLAY', 'PAUSED', 'HALFTIME']);
+
+function formatGame(g: any) {
   const [year, month, day] = g.match_date.split('-').map(Number);
   const dateObj = new Date(Date.UTC(year, month - 1, day));
 
@@ -90,10 +92,11 @@ startOfWeekAhead.setHours(0, 0, 0, 0);
     awayLogo: g.away_logo,
     homeScore: g.home_score,
     awayScore: g.away_score,
-    venue: g.venue || "TBD",
+    venue: g.venue || 'TBD',
     time: g.match_time,
     date: dateObj.toUTCString().slice(0, 16),
     status: g.status,
+    isLive: LIVE_STATUSES.has(g.status), // ← add this
   };
 }
 

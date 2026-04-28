@@ -243,13 +243,14 @@ const isEmpty = !loading && !error;
           {(games.today ?? []).length === 0 ? (
             <EmptyState message={`No ${selectedLeague} games today`} />
           ) : (
-           games.today.map((g, i) => (
+           // TODAY
+games.today.map((g, i) => (
   <div key={i} onClick={() => setSelectedGame(g)}>
     <GameCard
       {...g}
-      center={g.homeScore != null ? `${g.homeScore} - ${g.awayScore}` : g.time}
+      center={g.isLive ? `${g.homeScore} - ${g.awayScore}` : g.time}
       sub={g.venue}
-      isLive={g.homeScore != null}
+      isLive={g.isLive} // ← was g.homeScore != null
     />
   </div>
 ))

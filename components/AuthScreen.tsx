@@ -6,12 +6,18 @@ export default function AuthScreen() {
   const supabase = createClient();
 
   const signInWithGoogle = async () => {
+    localStorage.removeItem('matchday_guest');
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
+  };
+
+  const continueAsGuest = () => {
+    localStorage.setItem('matchday_guest', 'true');
+    window.location.reload();
   };
 
   return (
@@ -31,17 +37,22 @@ export default function AuthScreen() {
       <div className="w-full max-w-sm space-y-3 mb-10">
         {[
           { icon: '⚽', label: 'Live scores & fixtures' },
-          { icon: '🏆', label: 'Track your club' },
-          { icon: '👥', label: 'Fantasy football with friends' },
-        ].map(({ icon, label }) => (
+          { icon: '🏆', label: 'Track your club', accountOnly: true },
+          { icon: '👥', label: 'Fantasy football with friends', accountOnly: true },
+        ].map(({ icon, label, accountOnly }) => (
           <div key={label} className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3">
             <span className="text-xl">{icon}</span>
-            <span className="text-zinc-300 text-sm font-medium">{label}</span>
+            <span className="text-zinc-300 text-sm font-medium flex-1">{label}</span>
+            {accountOnly && (
+              <span className="text-[10px] font-semibold text-zinc-500 border border-zinc-700 px-2 py-0.5 rounded-full">
+                Account
+              </span>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Sign in button */}
+      {/* Buttons */}
       <div className="w-full max-w-sm space-y-3">
         <button
           onClick={signInWithGoogle}
@@ -54,6 +65,13 @@ export default function AuthScreen() {
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
           Continue with Google
+        </button>
+
+        <button
+          onClick={continueAsGuest}
+          className="w-full flex items-center justify-center gap-3 bg-transparent text-zinc-400 font-semibold text-sm px-4 py-4 rounded-2xl border border-zinc-800 hover:border-zinc-600 hover:text-zinc-300 transition-colors"
+        >
+          Continue as Guest
         </button>
 
         <p className="text-zinc-600 text-xs text-center">

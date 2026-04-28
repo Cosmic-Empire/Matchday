@@ -2,25 +2,37 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
 import HomeScreen from '../components/HomeScreen';
 import GameScreen from '../components/GameScreen';
 import FantasyScreen from '../components/FantasyScreen';
 import ClubScreen from '../components/ClubScreen';
 import AuthScreen from '../components/AuthScreen';
 
+const TABS = ['home', 'games', 'fantasy', 'club'] as const;
+type Tab = typeof TABS[number];
+
+const SWIPE_THRESHOLD = 50;
+const SWIPE_MAX_VERTICAL = 75; // ignore if too vertical
+
 export default function App() {
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'home' | 'games' | 'fantasy' | 'club'>('home');
+  const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [direction, setDirection] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   const supabase = createClient();
 
-  // Auth state
   useEffect(() => {
+    setIsGuest(localStorage.getItem('matchday_guest') === 'true');
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoadingAuth(false);
@@ -46,7 +58,7 @@ export default function App() {
 
     const updateIndicator = () => {
       const buttons = container.querySelectorAll('button');
-      const index = ['home', 'games', 'fantasy', 'club'].indexOf(activeTab);
+      const index = TABS.indexOf(activeTab);
       const btn = buttons[index] as HTMLElement;
       if (!btn) return;
 
@@ -69,7 +81,42 @@ export default function App() {
     return () => resizeObserver.disconnect();
   }, [activeTab]);
 
-  // Loading state
+  const goToTab = (tab: Tab) => {
+    const currentIndex = TABS.indexOf(activeTab);
+    const nextIndex = TABS.indexOf(tab);
+    setDirection(nextIndex > currentIndex ? 1 : -1);
+    setActiveTab(tab);
+  };
+
+  // Native touch handlers — work regardless of inner scroll containers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+
+    // Ignore if gesture is more vertical than horizontal
+    if (Math.abs(dy) > SWIPE_MAX_VERTICAL) return;
+
+    const currentIndex = TABS.indexOf(activeTab);
+
+    if (dx < -SWIPE_THRESHOLD && currentIndex < TABS.length - 1) {
+      setDirection(1);
+      setActiveTab(TABS[currentIndex + 1]);
+    } else if (dx > SWIPE_THRESHOLD && currentIndex > 0) {
+      setDirection(-1);
+      setActiveTab(TABS[currentIndex - 1]);
+    }
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   if (loadingAuth) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
@@ -78,18 +125,51 @@ export default function App() {
     );
   }
 
-  // Not logged in
-  if (!user) {
+  if (!user && !isGuest) {
     return <AuthScreen />;
   }
 
+  const slideVariants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? '100%' : '-100%',
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: { duration: 0.28, ease: [0.32, 0.72, 0, 1] },
+    },
+    exit: (dir: number) => ({
+      x: dir > 0 ? '-100%' : '100%',
+      opacity: 0,
+      transition: { duration: 0.22, ease: [0.4, 0, 1, 1] },
+    }),
+  };
+
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white font-sans">
-      <div className="max-w-[430px] mx-auto min-h-screen relative pb-24">
-        {activeTab === 'home'    && <HomeScreen />}
-        {activeTab === 'games'   && <GameScreen />}
-        {activeTab === 'fantasy' && <FantasyScreen />}
-        {activeTab === 'club'    && <ClubScreen />}
+    <div
+      className="min-h-screen bg-[#0A0A0A] text-white font-sans"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="max-w-[430px] mx-auto min-h-screen relative pb-24 overflow-hidden">
+
+        <AnimatePresence mode="popLayout" custom={direction}>
+          <motion.div
+            key={activeTab}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            className="w-full"
+          >
+            {activeTab === 'home'    && <HomeScreen />}
+            {activeTab === 'games'   && <GameScreen />}
+            {activeTab === 'fantasy' && <FantasyScreen />}
+            {activeTab === 'club'    && <ClubScreen />}
+          </motion.div>
+        </AnimatePresence>
 
         <nav className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300
           ${scrolled ? 'w-[72%] max-w-[300px]' : 'w-[80%] max-w-[330px]'}`}>
@@ -105,12 +185,12 @@ export default function App() {
             {[
               { id: 'home',    label: 'Home',    icon: HomeIcon },
               { id: 'games',   label: 'Games',   icon: GamesIcon },
-              { id: 'fantasy', label: 'Fantasy',  icon: FantasyIcon },
+              { id: 'fantasy', label: 'Fantasy', icon: FantasyIcon },
               { id: 'club',    label: 'Club',    icon: ClubIcon },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id as typeof activeTab)}
+                onClick={() => goToTab(id as Tab)}
                 className="relative flex flex-1 flex-col items-center gap-1 px-2 py-1 rounded-2xl transition-all duration-300"
               >
                 <div className={`relative flex items-center justify-center transition-all duration-300
