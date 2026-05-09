@@ -1112,7 +1112,7 @@ return (
       {/* Player picker modal */}
       {pickingSlot !== null && (
         <PlayerPickerModal
-          pickingSlot={pickingSlot} filteredPlayers={filteredPlayers} playerLoadState={playerLoadState}
+          pickingSlot={pickingSlot!} filteredPlayers={filteredPlayers} playerLoadState={playerLoadState}
           playerSearch={playerSearch} leagueFilter={leagueFilter} visibleRange={visibleRange} gridRef={gridRef}
           onClose={closePicker} onSelect={selectPlayer} onSearchChange={setPlayerSearch} onLeagueChange={setLeagueFilter}
         />
