@@ -1120,7 +1120,7 @@ return (
 
       {/* Pack opening modal */}
       <AnimatePresence>
-        {openingPack && <PackOpenModal pack={openingPack} pulledPlayers={pulledPlayers} onClose={closePack} />}
+        {openingPack && <PackOpenModal pack={openingPack!} pulledPlayers={pulledPlayers} onClose={closePack} />}
       </AnimatePresence>
 
       {/* Buy player modal */}
