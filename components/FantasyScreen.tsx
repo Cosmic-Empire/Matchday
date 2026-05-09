@@ -1131,7 +1131,7 @@ return (
             <motion.div initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }} onClick={e => e.stopPropagation()}
               style={{ width: '100%', maxWidth: 430, background: 'rgba(12,12,12,0.98)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: 20 }}>
               <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-                <div style={{ width: 110, flexShrink: 0 }}><FifaCard player={buyingPlayer} showRarity /></div>
+                <div style={{ width: 110, flexShrink: 0 }}><FifaCard player={buyingPlayer!} showRarity /></div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <p style={{ color: '#71717a', fontSize: 11, marginBottom: 4 }}>{buyingPlayer.league}</p>
                   <p style={{ color: '#fff', fontWeight: 900, fontSize: 18, lineHeight: 1.2 }}>{buyingPlayer.name}</p>
