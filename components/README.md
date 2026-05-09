@@ -15,3 +15,6 @@ git branch   - We Want this to be MAIN
 git push origin main
 
 git push -u origin main
+
+To update table:
+    localhost:3000/api/update

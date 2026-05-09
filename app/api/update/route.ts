@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { venueMap } from '@/lib/venueMap'; // ← adjust path if needed
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -56,18 +57,10 @@ export async function POST(req: NextRequest) {
         }));
         const { error } = await supabase.from('standings').insert(rows);
         if (error) console.error("Standings insert error:", error);
-else console.log(`✅ Inserted ${rows.length} rows for ${league}`);
-        
-
-        const standingsRes = await fetch(
-  `https://api.football-data.org/v4/competitions/${code}/standings`,
-  { headers: { 'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY! } }
-);
-const standingsData = await standingsRes.json();
-console.log(`${league} standings response:`, JSON.stringify(standingsData).slice(0, 200));
+        else console.log(`✅ Inserted ${rows.length} standings rows for ${league}`);
       }
 
-      // ── Matches (INSIDE the loop, with auth header) ────────
+      // ── Matches ────────────────────────────────────────────
       const today = new Date();
       const from = new Date(today);
       from.setDate(today.getDate() - 2);
@@ -78,27 +71,29 @@ console.log(`${league} standings response:`, JSON.stringify(standingsData).slice
         `https://api.football-data.org/v4/competitions/${code}/matches` +
         `?dateFrom=${from.toISOString().split('T')[0]}` +
         `&dateTo=${to.toISOString().split('T')[0]}`,
-        { headers: { 'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY! } } // ← was missing
+        { headers: { 'X-Auth-Token': process.env.FOOTBALL_DATA_API_KEY! } }
       );
       const matchData = await matchRes.json();
       const matches = matchData?.matches || [];
 
       const formattedMatches = matches
-  .filter((m: any) => m.homeTeam?.name && m.awayTeam?.name) // skip bad rows
-  .map((m: any) => ({
-    league,
-    home_team: m.homeTeam.name,
-    away_team: m.awayTeam.name,
-    home_score: m.score?.fullTime?.home ?? null,
-    away_score: m.score?.fullTime?.away ?? null,
-    status: m.status,
-    match_date: m.utcDate,
-    venue: m.venue || "TBD",
-  }));
+        .filter((m: any) => m.homeTeam?.name && m.awayTeam?.name)
+        .map((m: any) => ({
+          league,
+          home_team: m.homeTeam.name,
+          away_team: m.awayTeam.name,
+          home_score: m.score?.fullTime?.home ?? null,
+          away_score: m.score?.fullTime?.away ?? null,
+          status: m.status,
+          match_date: m.utcDate,
+          // ← Look up venue by home team name, fall back to null
+          venue: venueMap[m.homeTeam.name] ?? null,
+        }));
 
-      await supabase.from('fixtures').delete().eq('league', league); // ← was 'matches'
+      await supabase.from('fixtures').delete().eq('league', league);
       const { error: matchError } = await supabase.from('fixtures').insert(formattedMatches);
       if (matchError) console.error("Match insert error:", matchError);
+      else console.log(`✅ Inserted ${formattedMatches.length} fixtures for ${league}`);
     }
 
     return NextResponse.json({ success: true });
@@ -110,5 +105,5 @@ console.log(`${league} standings response:`, JSON.stringify(standingsData).slice
 }
 
 export async function GET() {
-  return POST(new Request('http://localhost:3000/api/update-standings', { method: 'POST' }) as any);
+  return POST(new Request('http://localhost:3000/api/update', { method: 'POST' }) as any);
 }

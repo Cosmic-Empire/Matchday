@@ -29,7 +29,7 @@ interface LeagueData {
   table: Standing[];
 }
 
-export default function HomeScreen() {
+export default function HomeScreen({ onOpenWC }: { onOpenWC?: () => void }) {
   const supabase = createClient();
   const { settings, setSettings } = useSettings();
 
@@ -128,6 +128,46 @@ export default function HomeScreen() {
           </div>
         </motion.div>
       )}
+
+      {/* WORLD CUP BANNER */}
+<div className="px-5 pb-3">
+  <motion.button
+    initial={{ opacity: 0, y: 8 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.25, ease: 'easeOut' }}
+    whileTap={{ scale: 0.98 }}
+    onClick={() => onOpenWC?.()}
+    className="w-full text-left rounded-2xl overflow-hidden relative"
+    style={{
+      border: '1px solid rgba(96,165,250,0.22)',
+boxShadow: '0 4px 24px rgba(59,130,246,0.1)',
+background: 'linear-gradient(135deg,#020818 0%,#050e2a 55%,#030a1c 100%)',
+    }}
+  >
+    {/* glow blob */}
+    <div style={{ position: 'absolute', top: -30, right: -30, width: 130, height: 130, borderRadius: '50%', background: '#3b82f6', opacity: 0.07, filter: 'blur(40px)', pointerEvents: 'none' }} />
+
+    <div className="flex items-center gap-3 px-4 py-3 relative">
+      <span className="text-2xl flex-shrink-0">🏆</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-white font-bold text-sm">FIFA World Cup 2026</span>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+            style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6', border: '1px solid rgba(96,165,250,0.25)' }}>
+            NEW
+          </span>
+        </div>
+        <p className="text-zinc-500 text-xs">USA · Canada · Mexico · Jun 11 – Jul 19</p>
+      </div>
+      <div className="flex-shrink-0 flex items-center gap-1.5" style={{ color: '#3b82f6' }}>
+        <span className="text-xs font-semibold">View</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M9 18L15 12L9 6" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </div>
+    </div>
+  </motion.button>
+</div>
 
       {/* CONTENT */}
       <div className="px-5 pb-8">

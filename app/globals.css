@@ -36,3 +36,7 @@ body {
 body {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+input, textarea, select {
+  font-size: 16px;
+}

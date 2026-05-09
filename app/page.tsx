@@ -8,6 +8,8 @@ import GameScreen from '../components/GameScreen';
 import FantasyScreen from '../components/FantasyScreen';
 import ClubScreen from '../components/ClubScreen';
 import AuthScreen from '../components/AuthScreen';
+import FIFAWCScreen from '@/components/FIFAWCScreen';
+
 
 const TABS = ['home', 'games', 'fantasy', 'club'] as const;
 type Tab = typeof TABS[number];
@@ -27,6 +29,7 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
+  const [showWC, setShowWC] = useState(false);
 
   const supabase = createClient();
 
@@ -164,12 +167,24 @@ export default function App() {
             exit="exit"
             className="w-full"
           >
-            {activeTab === 'home'    && <HomeScreen />}
-            {activeTab === 'games'   && <GameScreen />}
-            {activeTab === 'fantasy' && <FantasyScreen />}
-            {activeTab === 'club'    && <ClubScreen />}
+        {activeTab === 'home'    && <HomeScreen onOpenWC={() => setShowWC(true)} />}
+        {activeTab === 'games'   && <GameScreen />}
+        {activeTab === 'fantasy' && <FantasyScreen />}
+        {activeTab === 'club'    && <ClubScreen />}
           </motion.div>
         </AnimatePresence>
+
+        <AnimatePresence>
+  {showWC && (
+    <motion.div
+      initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+      transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+      className="fixed inset-0 z-50 bg-[#020818] overflow-y-auto"
+    >
+      <FIFAWCScreen onClose={() => setShowWC(false)} />
+    </motion.div>
+  )}
+</AnimatePresence>
 
         <nav className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300
           ${scrolled ? 'w-[72%] max-w-[300px]' : 'w-[80%] max-w-[330px]'}`}>
