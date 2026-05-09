@@ -1133,11 +1133,11 @@ return (
               <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
                 <div style={{ width: 110, flexShrink: 0 }}><FifaCard player={buyingPlayer!} showRarity /></div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <p style={{ color: '#71717a', fontSize: 11, marginBottom: 4 }}>{buyingPlayer.league}</p>
-                  <p style={{ color: '#fff', fontWeight: 900, fontSize: 18, lineHeight: 1.2 }}>{buyingPlayer.name}</p>
-                  <p style={{ color: '#a1a1aa', fontSize: 12, marginTop: 4 }}>{formatTeamName(buyingPlayer.team)}</p>
+                  <p style={{ color: '#71717a', fontSize: 11, marginBottom: 4 }}>{buyingPlayer!.league}</p>
+                  <p style={{ color: '#fff', fontWeight: 900, fontSize: 18, lineHeight: 1.2 }}>{buyingPlayer!.name}</p>
+                  <p style={{ color: '#a1a1aa', fontSize: 12, marginTop: 4 }}>{formatTeamName(buyingPlayer!.team)}</p>
                   <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                    {[['G', buyingPlayer.goals], ['A', buyingPlayer.assists], ['CS', buyingPlayer.clean_sheets]].map(([l, v]) => (
+                    {[['G', buyingPlayer!.goals], ['A', buyingPlayer!.assists], ['CS', buyingPlayer!.clean_sheets]].map(([l, v]) => (
                       <div key={String(l)} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 8, padding: '4px 8px', textAlign: 'center' }}>
                         <div style={{ color: '#fff', fontWeight: 700, fontSize: 12 }}>{v}</div>
                         <div style={{ color: '#71717a', fontSize: 9, textTransform: 'uppercase' }}>{l}</div>
@@ -1147,7 +1147,7 @@ return (
                 </div>
               </div>
               {(() => {
-                const cost = ({ common: 500, rare: 1500, epic: 4000, legendary: 10000 } as Record<string,number>)[buyingPlayer.rarity ?? 'common'];
+                const cost = ({ common: 500, rare: 1500, epic: 4000, legendary: 10000 } as Record<string,number>)[buyingPlayer!.rarity ?? 'common'];
                 const canAfford = currency.coins >= cost;
                 return (
                   <>
